@@ -35,7 +35,10 @@
     }
   },
   "dependencies": {
+    "express": "^4.17.1",
     "fluent-ffmpeg": "^2.1.2",
+    "node-media-server": "^2.3.8",
+    "video.js": "^7.14.3",
     "vue": "^3.2.6"
   },
   "devDependencies": {
