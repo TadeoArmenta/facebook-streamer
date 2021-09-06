@@ -1,46 +1,44 @@
-const  path = require('path');
-const { app, BrowserWindow } = require('electron');
-const express = require('express');
-const ffmpeg = require('fluent-ffmpeg');
-const NodeMediaServer = require('node-media-server');
-const mediaServerConfig = {
-  rtmp: {
-    port: 1935,
-    chunk_size: 60000,
-    gop_cache: true,
-    ping: 30,
-    ping_timeout: 60
-  },
-  http: {
-    port: 8000,
-    allow_origin: '*'
-  }
-};
-const nms = new NodeMediaServer(mediaServerConfig)
-
-nms.run();
-
+const path = require('path');
+const { app, BrowserWindow } = require('electron'); 
+const Ffmpeg = require('fluent-ffmpeg');
+const nms = require('./mediaserver.js');
+const { nms:mediaServer, pathToFfmpeg } = nms(app);
 const isDev = process.env.IS_DEV === "true";
-const serverApp = express();
-serverApp.get('/stream.mp4', (req, res) => {
-  res.writeHead(200, {
-    'Content-Type': 'video/mp4'
-  })
-  video.pipe(res) // sending video to the client
-})
-const video = ffmpeg()
-  .input('video=OBS Virtual Camera')
+Ffmpeg.setFfmpegPath(pathToFfmpeg.path);
+const video = Ffmpeg()
+  .input('video=OBS Virtual Camera:audio=Microphone (Logitech G933 Gaming Headset)')
   .inputFormat("dshow")
-  .size('1280x720')
-  .fps(25)
-  .addOptions([
+  .native()
+  .addOutput('rtmp://localhost:1935/live/video')
+  .outputOption([
     "-vcodec libx264",
     "-preset ultrafast",
     "-acodec aac",
     "-pix_fmt yuv422p"
   ])
+  .fps(25)
+  .size('1280x720')
   .format("flv")
-  .save('rtmp://localhost:1935/live/video')
+  
+  // .addOutput('rtmps://live-api-s.facebook.com:443/rtmp/FB-3036736326646833-0-AbwstKITV5L9xV5y')
+  // .outputOption([
+  //   "-vcodec libx264",
+  //   "-preset ultrafast",
+  //   "-acodec aac",
+  //   "-pix_fmt yuv422p"
+  // ])
+  // .fps(25)
+  // .size('1280x720')
+  // .format("flv")
+  .on('progress', function(progress) {
+    // console.log('Processing: ' + progress.currentFps);
+  })
+  .on('error', function(err) {
+    console.log('An error occurred: ' + err.message);
+  })
+  .on('end', function() {
+    console.log('Processing finished !');
+  })
 
 function createWindow() {
   // Create the browser window.
@@ -74,6 +72,8 @@ app.whenReady().then(() => {
   createWindow()
   if(video){
     // serverApp.listen(5050)
+    mediaServer.run();
+    video.run()
   }
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

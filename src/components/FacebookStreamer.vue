@@ -25,8 +25,7 @@ onMounted(() =>{
     poster: 'https://vjs.zencdn.net/v/oceans.png',
     sources: [
       {
-        src: 'rtmp://localhost/live/video',
-        type: "video/flv"
+        src: 'http://localhost:8000/live/video/index.m3u8',
       }
     ]
   }, onPlayerReady)
