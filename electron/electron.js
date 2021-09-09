@@ -2,6 +2,7 @@ const path      = require('path');
 const { app, BrowserWindow, ipcMain } = require('electron'); 
 const isDev     = process.env.IS_DEV === "true";
 const Streamer  = require('./streamer');
+const { stream } = require('./streamer');
 const streams   = {
   main: null
 }
@@ -56,10 +57,11 @@ app.on('window-all-closed', () => {
   }
 });
 
-ipcMain.on('streamStart', (event, data) =>{
-  const stream = Streamer.stream(data);
-  streams.main = Streamer.setEvents(ipcMain.emit, stream);
-
+ipcMain.on('streamStart', (event, data) => {
+  if(streams.main){
+    streams.main.kill()
+    streams.main = null
+  }
+  streams.main = Streamer.setEvents(event.sender, Streamer.stream(data));
   streams.main.run();
-
 })

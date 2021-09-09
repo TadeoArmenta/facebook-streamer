@@ -12,6 +12,7 @@
               v-model="audiobitrate"
               type="number"
               name="a-bitrate"
+              :disabled="disableInputs"
               class="rounded-md px-3 py-1 w-full">
           </div>
           <div class="flex-1 justify-center">
@@ -20,6 +21,7 @@
               v-model="width"
               type="number"
               name="v-width"
+              :disabled="disableInputs"
               class="rounded-md px-3 py-1 w-full">
           </div>
           <div class="flex-1 justify-center">
@@ -28,6 +30,7 @@
               v-model="height"
               type="number"
               name="v-height"
+              :disabled="disableInputs"
               class="rounded-md px-3 py-1 w-full">
           </div>
           <div class="flex-1 justify-center">
@@ -36,6 +39,7 @@
               v-model="framerate"
               type="number"
               name="v-framerate"
+              :disabled="disableInputs"
               class="rounded-md px-3 py-1 w-full">
           </div>
         </div>
@@ -46,6 +50,7 @@
             <select
               ref="videoSelect"
               name="a-bitrate"
+              :disabled="disableInputs"
               class="rounded-md px-3 py-1 w-full"
               @change="onVideoInputSelect">
             </select>
@@ -55,6 +60,7 @@
             <select
               ref="audioInputSelect"
               name="a-bitrate"
+              :disabled="disableInputs"
               class="rounded-md px-3 py-1 w-full"
               @change="onAudioInputSelect">
             </select>
@@ -68,6 +74,7 @@
               v-model="facebookUrl"
               type="text"
               name="fb-url"
+              :disabled="disableInputs"
               class="rounded-md px-3 py-1 w-full">
           </div>
           <div class="flex-1 justify-center">
@@ -76,6 +83,7 @@
               v-model="facebookKey"
               type="text"
               name="fb-url"
+              :disabled="disableInputs"
               class="rounded-md px-3 py-1 w-full">
           </div>
         </div>
@@ -83,9 +91,14 @@
           <button
             ref="startButton"
             type="button"
-            class="text-white font-medium text-lg bg-green-500 rounded-lg py-2 px-3 "
-            v-text="buttonText"
-            @click="streamStart"/>
+            :disabled="disableButton"
+            class="text-white font-medium text-lg rounded-lg py-2 px-3"
+            :class="{
+              'bg-green-400': !isStreaming,
+              'bg-red-500': isStreaming
+            }"
+            v-text="isStreaming ? 'Stop' : 'Start'"
+            @click="toggleStreaming"/>
         </div>
       </aside>
       <section class="w-full h-full p-5 order-last">
@@ -108,7 +121,6 @@ import { onMounted, ref} from "vue";
 const videoPlayer       = ref(null);
 const audioInputSelect  = ref(null);
 const videoSelect       = ref(null);
-const buttonText        = ref('Start');
 const audiobitrate      = ref(64);
 const width             = ref(1280);
 const height            = ref(720);
@@ -116,6 +128,10 @@ const framerate         = ref(30);
 const facebookUrl       = ref('rtmps://live-api-s.facebook.com:443/rtmp/');
 const facebookKey       = ref('FB-3038452209808578-0-AbxwCX78OLKIgeMe');
 const devices           = ref(null);
+
+const disableInputs     = ref(false);
+const disableButton     = ref(false);
+const isStreaming       = ref(false);
 
 const errorCallback = (e) => {
   console.log('Error', e)
@@ -197,27 +213,35 @@ const requestMedia = () => {
   })
   .catch(errorCallback);
 };
-const streamStart = () => {
-  const videoTracks = window.stream.getVideoTracks();
-  const audioTracks = window.stream.getAudioTracks();
+const toggleStreaming = () => {
+  if(isStreaming){
 
-  
-  const data = {
-      fbkey: facebookKey.value,
-      url: facebookUrl.value,
-      audiobitrate: audiobitrate.value,
-      size: `${width.value}x${height.value}`,
-      framerate: framerate.value,
-      video: videoTracks[0].label,
-      audio: audioTracks[0].label
+  }else{
+    const videoTracks = window.stream.getVideoTracks();
+    const audioTracks = window.stream.getAudioTracks();
+
+    
+    const data = {
+        fbkey: facebookKey.value,
+        url: facebookUrl.value,
+        audiobitrate: audiobitrate.value,
+        size: `${width.value}x${height.value}`,
+        framerate: framerate.value,
+        video: videoTracks[0].label,
+        audio: audioTracks[0].label
+    }
+    disableInputs.value = true
+    disableButton.value = true
+
+    window.ipcRenderer.send("streamStart", data);
   }
-  window.ipcRenderer.send("streamStart", data);
 };
 onMounted(() =>{
   requestMedia()
 })
 
-window.ipcRenderer.on('streamOnProgress', (event, progress) => {
-  console.log(progress);
+window.ipcRenderer.on('streamStarted', (e) => {
+  console.log(e);
+  isStreaming.value = true
 })
 </script>

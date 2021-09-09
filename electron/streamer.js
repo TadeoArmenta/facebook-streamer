@@ -13,7 +13,7 @@ module.exports = {
     stream: ({video, audio, fbkey, url, audiobitrate, size, framerate}) => {
         return Ffmpeg()
         // only for windows
-        .input(`video=${video}:audio=${audio}`)
+        .input(`video=${video.replace('Default - ','').trim()}:audio=${audio.replace('Default - ','').replace(/\([a-zA-Z0-9_][a-zA-Z0-9_][a-zA-Z0-9_][a-zA-Z0-9_]\:[a-zA-Z0-9_][a-zA-Z0-9_][a-zA-Z0-9_][a-zA-Z0-9_]\)/g, '').trim()}`)
         .inputFormat("dshow")  
         .addOutput(`${url}${fbkey}`)
         .outputOption([
@@ -27,11 +27,14 @@ module.exports = {
         .size(size)
         .format("flv")
     },
-    setEvents: (emit, stream) => {
+    setEvents: (sender, stream) => {
         stream
+        .on('start', (cmd) => {
+            sender.send('streamStarted', cmd);
+        })
         .on('progress', function(progress) {
-            console.log(progress);
-            emit('streamOnProgress', progress)
+            // console.log(progress);
+            // emit('streamOnProgress', progress)
         })
         .on('error', function(err) {
             // emit('streamError', err)
