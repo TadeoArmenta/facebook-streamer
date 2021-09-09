@@ -22,8 +22,10 @@
       "category": "public.streaming.utilities"
     },
     "nsis": {
+      "allowToChangeInstallationDirectory": true,
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "license": "license.html",
+      "include": "src/installer.nsh"
     },
     "files": [
       "dist/**/*",
@@ -35,11 +37,9 @@
     }
   },
   "dependencies": {
-    "ffmpeg-static-electron": "TadeoArmenta/ffmpeg-static-electron.git#1f07113",
+    "ffdevices": "^0.1.1",
+    "ffmpeg-static-electron": "TadeoArmenta/ffmpeg-static-electron.git#e7a45ec",
     "fluent-ffmpeg": "^2.1.2",
-    "fs-extra": "^10.0.0",
-    "node-media-server": "^2.3.8",
-    "video.js": "^7.14.3",
     "vue": "^3.2.6"
   },
   "devDependencies": {

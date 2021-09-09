@@ -1,56 +1,25 @@
-const path = require('path');
-const { app, BrowserWindow } = require('electron'); 
-const Ffmpeg = require('fluent-ffmpeg');
-const nms = require('./mediaserver.js');
-const { nms:mediaServer, pathToFfmpeg } = nms(app);
-const isDev = process.env.IS_DEV === "true";
-Ffmpeg.setFfmpegPath(pathToFfmpeg.path);
-const video = Ffmpeg()
-  .input('video=OBS Virtual Camera:audio=Microphone (Logitech G933 Gaming Headset)')
-  .inputFormat("dshow")
-  .native()
-  .addOutput('rtmp://localhost:1935/live/video')
-  .outputOption([
-    "-vcodec libx264",
-    "-preset ultrafast",
-    "-acodec aac",
-    "-pix_fmt yuv422p"
-  ])
-  .fps(25)
-  .size('1280x720')
-  .format("flv")
-  
-  // .addOutput('rtmps://live-api-s.facebook.com:443/rtmp/FB-3036736326646833-0-AbwstKITV5L9xV5y')
-  // .outputOption([
-  //   "-vcodec libx264",
-  //   "-preset ultrafast",
-  //   "-acodec aac",
-  //   "-pix_fmt yuv422p"
-  // ])
-  // .fps(25)
-  // .size('1280x720')
-  // .format("flv")
-  .on('progress', function(progress) {
-    // console.log('Processing: ' + progress.currentFps);
-  })
-  .on('error', function(err) {
-    console.log('An error occurred: ' + err.message);
-  })
-  .on('end', function() {
-    console.log('Processing finished !');
-  })
+const path      = require('path');
+const { app, BrowserWindow, ipcMain } = require('electron'); 
+const isDev     = process.env.IS_DEV === "true";
+const Streamer  = require('./streamer');
+const streams   = {
+  main: null
+}
 
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
     // titleBarStyle: 'hidden',
+    show: false,
     webPreferences: {
+      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
+      enableRemoteModule: true,
       preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: true,
     },
   });
+  mainWindow.maximize();
+  mainWindow.show();
 
   // and load the index.html of the app.
   // win.loadFile("index.html");
@@ -70,11 +39,6 @@ function createWindow() {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   createWindow()
-  if(video){
-    // serverApp.listen(5050)
-    mediaServer.run();
-    video.run()
-  }
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
@@ -91,3 +55,11 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
+
+ipcMain.on('streamStart', (event, data) =>{
+  const stream = Streamer.stream(data);
+  streams.main = Streamer.setEvents(ipcMain.emit, stream);
+
+  streams.main.run();
+
+})
