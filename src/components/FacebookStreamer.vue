@@ -126,7 +126,7 @@ const width             = ref(1280);
 const height            = ref(720);
 const framerate         = ref(30);
 const facebookUrl       = ref('rtmps://live-api-s.facebook.com:443/rtmp/');
-const facebookKey       = ref('FB-3038452209808578-0-AbxwCX78OLKIgeMe');
+const facebookKey       = ref('');
 const devices           = ref(null);
 
 const disableInputs     = ref(false);
@@ -155,7 +155,6 @@ const gotDevices = (deviceInfos) => {
   }
 }
 const onAudioInputSelect = event => {
-  console.log(event);
   videoPlayer.value.setSinkId(event.target.value)
     .then(function() {
       console.log('Audio input device attached: ' + event.target.value);
@@ -163,7 +162,6 @@ const onAudioInputSelect = event => {
     .catch(errorCallback);
 }
 const onVideoInputSelect = event => {
-  console.log(event);
   videoPlayer.value.setSinkId(event.target.value)
     .then(function() {
       console.log('Video device attached: ' + event.target.value);
@@ -215,12 +213,10 @@ const requestMedia = () => {
 };
 const toggleStreaming = () => {
   if(isStreaming){
-
+    window.ipcRenderer.send("streamStop");
   }else{
     const videoTracks = window.stream.getVideoTracks();
     const audioTracks = window.stream.getAudioTracks();
-
-    
     const data = {
         fbkey: facebookKey.value,
         url: facebookUrl.value,
