@@ -24,8 +24,7 @@
     "nsis": {
       "allowToChangeInstallationDirectory": true,
       "oneClick": false,
-      "license": "license.html",
-      "include": "src/installer.nsh"
+      "license": "license.html"
     },
     "files": [
       "dist/**/*",
