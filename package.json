@@ -24,7 +24,7 @@
     "nsis": {
       "allowToChangeInstallationDirectory": true,
       "oneClick": false,
-      "license": "license.html"
+      "license": "LICENSE"
     },
     "files": [
       "dist/**/*",

@@ -212,7 +212,7 @@ const requestMedia = () => {
   .catch(errorCallback);
 };
 const toggleStreaming = () => {
-  if(isStreaming){
+  if(isStreaming.value){
     window.ipcRenderer.send("streamStop");
   }else{
     const videoTracks = window.stream.getVideoTracks();
